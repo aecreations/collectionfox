@@ -1,8 +1,8 @@
 # Makefile for CollectionFox
 
-EXT_VER=`./getver.pl`
+EXT_VER=`python3 ./getver.py`
 DIST_FILE=readnext-$(EXT_VER).zip
-EXCLUDE=*~ *\.pl Makefile
+EXCLUDE=*~ *\.pl *\.py Makefile
 
 
 $(DIST_FILE):
