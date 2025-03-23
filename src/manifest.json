@@ -1,0 +1,92 @@
+{
+  "manifest_version": 2,
+  "name": "__MSG_extName__",
+  "description": "__MSG_extDesc__",
+  "version": "1.5+",
+  "author": "AE Creations",
+  "homepage_url": "https://aecreations.io/",
+
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "collectionfox@aecreations.github.io",
+      "strict_min_version": "128.0"
+    }
+  },
+
+  "icons": {
+    "32": "img/icon32.png",
+    "64": "img/icon64.png"
+  },
+
+  "permissions": [
+    "alarms",
+    "identity",
+    "menus",
+    "notifications",
+    "storage",
+    "tabs",
+    "unlimitedStorage"
+  ],
+  
+  "background": {
+    "persistent": false,
+    "scripts": [
+      "lib/dexie.min.js",
+      "lib/md5.min.js",
+      "lib/purify.min.js",
+      "scripts/aeConst.js",
+      "scripts/aePrefs.js",
+      "scripts/aeVersionCmp.js",
+      "scripts/aeBookmark.js",
+      "scripts/aeReadingList.js",
+      "scripts/aeSyncReadingList.js",
+      "scripts/aeOAuthClient.js",
+      "scripts/aeAbstractFileHost.js",
+      "scripts/aeDropbox.js",
+      "scripts/aeAuthorizationError.js",
+      "scripts/aeNotFoundError.js",
+      "scripts/aeFileHostUI.js",
+      "background.js"
+    ]
+  },
+
+  "browser_action": {
+    "default_icon": "img/readnext-tb.svg",
+    "default_title": "__MSG_extName__",
+    "default_area": "navbar",
+    "theme_icons": [
+      {
+	"light": "img/readnext-tb-dk.svg",
+	"dark": "img/readnext-tb.svg",
+	"size": 16
+      },
+      {
+	"light": "img/readnext-tb-dk.svg",
+	"dark": "img/readnext-tb.svg",
+	"size": 32
+      }
+    ]
+  },
+
+  "page_action": {
+    "default_icon": {
+      "16": "img/bookmark.svg",
+      "32": "img/bookmark.svg"
+    },
+    "default_title": "__MSG_addBkmk__"
+  },
+
+  "sidebar_action": {
+    "default_title": "__MSG_extName__",
+    "default_panel": "pages/sidebar.html",
+    "default_icon": "img/readnext16.svg"
+  },
+  
+  "options_ui": {
+    "page": "pages/options.html",
+    "open_in_tab": true,
+    "browser_style": false
+  },
+
+  "default_locale": "en"
+}

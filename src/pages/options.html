@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<html>
+  <head>
+    <meta charset="utf-8">
+
+    <link rel="shortcut icon" href="../img/icon32.png">
+    <link rel="stylesheet" href="options.css">
+  </head>
+
+  <body>
+    <main>
+      <div id="pref-logo">
+        <img id="addon-icon" src="../img/icon64.png" role="presentation">
+        <p id="hdr-ext-name" data-i18n="extName" role="banner"></p>
+      </div>
+      <div id="pref-body">
+	<h2 id="pref-hdg"></h2>
+	<button id="about-btn" data-i18n="aboutBtn"></button>
+
+	<fieldset id="sync-options">
+	  <legend data-i18n="prefsHdgSync"></legend>
+	  <div id="sync-status-ctr">
+	    <div id="sync-icon" class="nosync"></div>
+	    <div id="sync-status-info">
+	      <div id="sync-status">
+	        <img id="sync-status-spinner" class="spinner" src="../img/loading@2x.png"/>
+	      </div>
+
+	      <div id="sync-actions" class="row">
+                <button id="retry-conn" data-i18n="btnRetry"></button>
+		<button id="reauthorize" data-i18n="btnReauthz"></button>
+		<button id="toggle-sync"></button>
+	      </div>
+	    </div>
+	  </div>
+	</fieldset>
+
+	<fieldset id="general-options">
+	  <legend data-i18n="prefsHdgInteg"></legend>
+	  <div class="row browser-style">
+	    <input type="checkbox" id="add-awesome-bar"><label for="add-awesome-bar" data-i18n="prefAddrBarBtn"></label>
+	  </div>
+	  <div class="row browser-style">
+	    <input type="checkbox" id="add-cxt-menu"><label for="add-cxt-menu" data-i18n="prefCxtMenuBtn"></label>
+	  </div>
+	</fieldset>
+	<fieldset id="actions-options">
+	  <legend data-i18n="prefHdgActions"></legend>
+	  <div class="row browser-style">
+	    <input type="checkbox" id="close-tab-after-add"><label for="close-tab-after-add" data-i18n="prefCloseTabAfterAdd"></label>
+	  </div>
+	  <p id="close-tab-after-add-desc" class="description"></p>
+          <div class="row browser-style">
+            <input type="checkbox" id="hilite-new-links"><label for="hilite-new-links" data-i18n="prefHiliteNew"></label>
+          </div>
+	  <div class="row browser-style">
+	    <input type="checkbox" id="auto-delete-when-read"><label for="auto-delete-when-read" data-i18n="prefAutoDel"></label>
+	  </div>
+	  <div class="row browser-style">
+            <input type="checkbox" id="auto-close-sidebar"><label for="auto-close-sidebar" data-i18n="prefCloseSidebar"></label>
+          </div>
+	  <div id="open-links-in-opts" class="row browser-style">
+            <label id="open-links-in-label" data-i18n="prefClickLinkHdg"></label>
+	    <input type="radio" id="open-in-curr-tab" name="open-links-in" value="0"><label for="open-in-curr-tab" data-i18n="clickLnkCurrTab"></label>
+	    <input type="radio" id="open-in-new-tab" name="open-links-in" value="1"><label for="open-in-new-tab" data-i18n="clickLnkNewTab"></label>
+          </div>
+	</fieldset>
+      </div>  <!-- /pref-body -->
+    </main>
+
+    <!-- Dialog boxes -->
+    <div id="connect-dlg" class="lightbox" role="dialog">
+      <div class="dlg-content">
+	<div id="authz-prologue" class="wiz-page">
+          <div class="wiz-icon"></div>
+          <div class="wiz-body">
+	    <p class="title" data-i18n="connWizTitle1"></p>
+	    <p id="authz-instr" data-i18n="wizAuthzInstr1"></p>
+	    <p data-i18n="wizAuthzInstr2"></p>
+          </div>
+	</div>
+	<div id="authz-progress" class="wiz-page">
+          <div class="wiz-icon"></div>
+          <div class="wiz-body">
+            <p class="title" data-i18n="connWizTitle2"></p>
+	    <img id="init-sync-spinner" class="spinner" src="../img/loading@2x.png"/>
+          </div>
+	</div>
+	<div id="authz-success" class="wiz-page">
+          <div class="wiz-icon"></div>
+          <div class="wiz-body">
+	    <p class="title" data-i18n="connWizTitle3"></p>
+	    <p id="authz-succs-msg"></p>
+	    <p data-i18n="wizSetupRem"></p>
+          </div>
+	</div>
+	<div id="authz-retry" class="wiz-page">
+          <div class="wiz-icon"></div>
+          <div class="wiz-body">
+            <p class="title" data-i18n="connWizTitle2"></p>
+	    <p id="authz-interrupt"></p>
+          </div>
+	</div>
+        <div id="authz-network-error" class="wiz-page">
+          <div class="wiz-icon"></div>
+          <div class="wiz-body">
+	    <p class="title" data-i18n="connWizTitNetErr"></p>
+	    <p data-i18n="wizAuthzNetErr"></p>
+          </div>
+        </div>
+      </div>
+      <div class="dlg-btns">
+	<button class="dlg-accept default" data-i18n="btnNext"></button>
+	<button class="dlg-btn dlg-cancel" data-i18n="btnCancel"></button>
+      </div>
+    </div>
+    
+    <div id="disconnect-dlg" class="lightbox" role="alertdialog"
+     aria-labelledby="disconnect-confirm">
+      <div class="dlg-content">
+        <div class="msgbox-icon"></div>
+        <div class="msgbox-content">
+	  <p id="disconnect-confirm" class="title"></p>
+          <p class="description" data-i18n="disconnConf"></p>
+        </div>
+      </div>
+      <div class="dlg-btns">
+	<button class="dlg-btn dlg-btn-disconn" data-i18n="btnDisconn"></button>
+	<button class="dlg-accept default" data-i18n="btnCancel"></button>
+      </div>
+    </div>
+
+    <div id="about-dlg" class="lightbox" role="dialog">
+      <div class="dlg-content">
+        <div id="ext-icon"></div>
+	<div id="ext-info">
+          <label id="ext-name" class="about-content-row"></label>
+	  <label id="ext-ver" class="about-content-row"></label>
+	</div>
+	<label id="ext-desc" class="about-content-row"></label>
+	<hr/>
+	<div id="credits">
+	  <div class="about-content-row">
+	    <label id="ext-author" data-i18n="aboutAuthor"></label>
+	    <a id="ext-home-pg-link" class="hyperlink" data-i18n="aboutHomePgLink"></a>
+          </div>
+	  <label id="translations-ack" class="about-content-row" data-i18n="aboutTrans"></label>
+          <div class="about-content-row">
+	    <a href="../LICENSE.txt" id="aboutLicLink" class="hyperlink" data-i18n="aboutLicLink"></a>
+          </div>
+          <div id="usr-contrib-cta" class="about-content-row">
+          </div>
+	</div>
+      </div>
+      <div class="dlg-btns">
+	<button class="dlg-accept default" data-i18n="btnOK"></button>
+      </div>
+    </div>
+
+    <script src="../lib/jquery.js"></script>
+    <script src="../lib/purify.min.js"></script>
+    <script src="../scripts/aeConst.js"></script>
+    <script src="../scripts/aePrefs.js"></script>
+    <script src="../scripts/aeI18n.js"></script>
+    <script src="../scripts/aeInterxn.js"></script>
+    <script src="../scripts/aeDialog.js"></script>
+    <script src="../scripts/aeOAuth.js"></script>
+    <script src="../scripts/aeFileHostUI.js"></script>
+    <script src="../scripts/aeVisual.js"></script>
+    <script src="options.js"></script>
+  </body>
+</html>
