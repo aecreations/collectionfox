@@ -2,7 +2,7 @@
 
 EXT_VER=`python3 ./getver.py`
 DIST_FILE=readnext-$(EXT_VER).zip
-EXCLUDE=*~ *\.pl *\.py Makefile
+EXCLUDE=*~ *\.py Makefile
 
 
 $(DIST_FILE):
