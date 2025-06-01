@@ -168,58 +168,6 @@ let gCmd = {
 }; 
 
 
-let gReadingListFilter = {
-  ALL: 0,
-  UNREAD: 1,
-  
-  _filter: 0,
-
-  getSelectedFilter()
-  {
-    return this._filter;
-  },
-
-  async setFilter(aFilter)
-  {
-    if (this._filter == aFilter) {
-      return;
-    }
-
-    this._filter = aFilter;
-
-    if (this._filter == this.UNREAD && gSearchBox.isSearchInProgress()) {
-      let srchBkmk = await browser.runtime.sendMessage({
-        id: "search-bookmarks",
-        searchTerms: gSearchBox.getSearchText(),
-      });
-
-      for (let item of srchBkmk) {
-        if (!item.unread) {
-          // The link matching the search term is found, but isn't unread.
-          // Show "No items found" message, which is more accurate than
-          // "No unread items"
-          toggleNotFoundMsg(true);
-          break;
-        }
-      }
-    }
-    
-    let bkmks = await gCmd.getBookmarks();
-    await rebuildReadingList(bkmks, aFilter == this.UNREAD);
-
-    if (bkmks.length == 0) {
-      toggleSearchBar(false);
-      toggleEmptyMsg(true);
-    }
-    else {
-      if (aFilter == this.UNREAD && isReadingListEmpty() && !isNotFoundMsgVisible()) {
-        toggleNoUnreadMsg(true);
-      }
-    }
-  },
-};
-
-
 let gFavIconMap = {
   _favIconMap: null,
 
@@ -361,10 +309,6 @@ let gSearchBox = {
       searchTerms: $("#search-box").val(),
     });
 
-    let unreadOnly = gReadingListFilter.getSelectedFilter() == gReadingListFilter.UNREAD;
-    if (unreadOnly) {
-      srchResults = srchResults.filter(aItem => aItem.unread);
-    }
     this._numMatches = srchResults.length;
 
     if (srchResults.length == 0) {
@@ -375,7 +319,7 @@ let gSearchBox = {
       return;
     }
     
-    await rebuildReadingList(srchResults, unreadOnly);
+    await rebuildReadingList(srchResults);
   },
 
   async isInSearchResult(aSearchText)
@@ -414,16 +358,7 @@ let gSearchBox = {
       return;
     }
 
-    let unreadOnly = gReadingListFilter.getSelectedFilter() == gReadingListFilter.UNREAD;
-    if (unreadOnly) {
-      let unreadBkmks = bkmks.filter(aBkmk => aBkmk.unread);
-      if (unreadBkmks.length == 0) {
-        toggleNoUnreadMsg(true);
-        return;
-      }
-    }
-    
-    rebuildReadingList(bkmks, unreadOnly);
+    rebuildReadingList(bkmks);
   }
 };
 
@@ -677,14 +612,9 @@ function removeReadingListItem(aBookmarkID)
   bkmkElt.fadeOut(800, function () {
     this.remove();
     if (isReadingListEmpty()) {
-      if (gReadingListFilter.getSelectedFilter() == gReadingListFilter.UNREAD) {
+      if (! gSearchBox.isSearchInProgress()) {
         gSearchBox.reset();
-      }
-      else {
-        if (! gSearchBox.isSearchInProgress()) {
-          gSearchBox.reset();
-          toggleEmptyMsg(true);
-        }
+        toggleEmptyMsg(true);
       }
       disableReadingListKeyboardNav();        
     }
@@ -717,7 +647,7 @@ function updateReadingListItem(aBookmark)
 }
 
 
-async function rebuildReadingList(aBookmarks, aUnreadOnly, aReloadFavIcons=false)
+async function rebuildReadingList(aBookmarks, aReloadFavIcons=false)
 {
   toggleEmptyMsg(false);
   toggleNoUnreadMsg(false);
@@ -766,49 +696,11 @@ async function markAsRead(aBookmarkID, aIsRead)
   if (aIsRead) {
     listItem.removeClass(cls);
     listItem.attr("data-unread", false);
-
-    if (gReadingListFilter.getSelectedFilter() == gReadingListFilter.UNREAD
-        && gPrefs.autoUpdateUnreadFilter) {
-      listItem.fadeOut(200, async () => {
-        let numUnreadItems = $("#reading-list").children().filter(":visible").length;
-        if (numUnreadItems == 0) {
-          if (gSearchBox.isSearchInProgress()) {
-            // If none of the unread items match the search terms, show 
-            // "No items found" which is more accurate than "No unread items"
-            let bkmks = await gCmd.getBookmarks();
-            let unreadItems = bkmks.filter(aItem => aItem.unread);
-            if (unreadItems.length == 0) {
-              toggleNoUnreadMsg(true);
-            }
-            else {
-              toggleNotFoundMsg(true);
-            }
-          }
-          else {
-            toggleNoUnreadMsg(true);
-          }
-        }
-      });
-    }
   }
   else {
     // Item was marked as unread.
-    let selectedFilter = gReadingListFilter.getSelectedFilter();
-    if (selectedFilter == gReadingListFilter.UNREAD && gPrefs.autoUpdateUnreadFilter) {
-      toggleNoUnreadMsg(false);
-      toggleNotFoundMsg(false);
-
-      let bkmks = await gCmd.getBookmarks();
-      await rebuildReadingList(bkmks, selectedFilter == gReadingListFilter.UNREAD);
-
-      if (gSearchBox.isSearchInProgress()) {
-        gSearchBox.updateSearch();
-      }
-    }
-    else {
-      listItem.addClass(cls);
-      listItem.attr("data-unread", true);
-    }
+    listItem.addClass(cls);
+    listItem.attr("data-unread", true);
   }
 }
 
@@ -948,16 +840,8 @@ function initDialogs()
   };
 
   gCustomizeDlg = new aeDialog("#customize-dlg");
-  gCustomizeDlg.onFirstInit = function ()
-  {
-    $("#unread-links-bold-label").html(sanitizeHTML(browser.i18n.getMessage("prefUnreadBold")));
-  };
   gCustomizeDlg.onInit = function ()
   {
-    $("#unread-links-bold").prop("checked", gPrefs.boldUnreadBkmks).on("click", aEvent => {
-      aePrefs.setPrefs({boldUnreadBkmks: aEvent.target.checked});
-    });
-
     $("#show-toolbar").prop("checked", gPrefs.toolbar).on("click", aEvent => {
       aePrefs.setPrefs({toolbar: aEvent.target.checked});
     });
@@ -1157,14 +1041,8 @@ function initDialogs()
     $("#cmd-mark-unread").text(unreadLabel);
 
     // Initial checked item
-    if (gReadingListFilter.getSelectedFilter() == gReadingListFilter.UNREAD) {
-      $("#cmd-show-all").removeClass("context-menu-icon-checked");
-      $("#cmd-show-unread").addClass("context-menu-icon-checked");
-    }
-    else {
-      $("#cmd-show-all").addClass("context-menu-icon-checked");
-      $("#cmd-show-unread").removeClass("context-menu-icon-checked");
-    }
+    $("#cmd-show-all").addClass("context-menu-icon-checked");
+    $("#cmd-show-unread").removeClass("context-menu-icon-checked");
   };
 
   gKeybdCxtMenu.onShow = function ()
@@ -1230,33 +1108,6 @@ function initContextMenu()
     },
 
     items: {
-      showAllLinks: {
-        name: browser.i18n.getMessage("cxtMnuFltrAll"),
-        className: "ae-menuitem",
-        callback(aKey, aOpt) {
-          $("#filter-all").click();
-        },
-        icon(aOpt, aItemElement, aItemKey, aItem) {
-          aItemElement.removeClass("context-menu-icon-checked")
-          if (gReadingListFilter.getSelectedFilter() == gReadingListFilter.ALL) {
-            return "context-menu-icon-checked";
-          }
-        },
-      },
-      showUnreadLinks: {
-        name: browser.i18n.getMessage("cxtMnuFltrUnread"),
-        className: "ae-menuitem",
-        callback(aKey, aOpt) {
-          $("#filter-unread").click();
-        },
-        icon(aOpt, aItemElement, aItemKey, aItem) {
-          aItemElement.removeClass("context-menu-icon-checked")
-          if (gReadingListFilter.getSelectedFilter() == gReadingListFilter.UNREAD) {
-            return "context-menu-icon-checked";
-          }
-        },
-      },
-      separator: "---",
       customize: {
         name: browser.i18n.getMessage("mnuCustz"),
         className: "ae-menuitem",
@@ -1324,32 +1175,6 @@ function initContextMenu()
         }
       },
       bkmkActionsSep: "---",
-      markAsRead: {
-        name: browser.i18n.getMessage("mnuMrkRead"),
-        className: "ae-menuitem",
-        async callback(aKey, aOpt) {
-          let bkmkElt = aOpt.$trigger[0];
-          let bkmkID = bkmkElt.dataset.id;
-          await gCmd.markAsRead(bkmkID, true);
-        },
-        visible(aKey, aOpt) {
-          let bkmkElt = aOpt.$trigger[0];
-          return bkmkElt.dataset.unread === "true";
-        }
-      },
-      markAsUnread: {
-        name: browser.i18n.getMessage("mnuMrkUnread"),
-        className: "ae-menuitem",
-        async callback(aKey, aOpt) {
-          let bkmkElt = aOpt.$trigger[0];
-          let bkmkID = bkmkElt.dataset.id;
-          await gCmd.markAsRead(bkmkID, false);
-        },
-        visible(aKey, aOpt) {
-          let bkmkElt = aOpt.$trigger[0];
-          return bkmkElt.dataset.unread === "false";
-        }
-      },
       renameBookmark: {
         name: browser.i18n.getMessage("renameBkmkCxt"),
         className: "ae-menuitem",
@@ -1392,33 +1217,6 @@ function initContextMenu()
         visible(aKey, aOpt) {
           return initContextMenu.showManualSync;
         }
-      },
-      filterSep: "---",
-      showAllLinks: {
-        name: browser.i18n.getMessage("cxtMnuFltrAll"),
-        className: "ae-menuitem",
-        callback(aKey, aOpt) {
-          $("#filter-all").click();
-        },
-        icon(aOpt, aItemElement, aItemKey, aItem) {
-          aItemElement.removeClass("context-menu-icon-checked")
-          if (gReadingListFilter.getSelectedFilter() == gReadingListFilter.ALL) {
-            return "context-menu-icon-checked";
-          }
-        },
-      },
-      showUnreadLinks: {
-        name: browser.i18n.getMessage("cxtMnuFltrUnread"),
-        className: "ae-menuitem",
-        callback(aKey, aOpt) {
-          $("#filter-unread").click();
-        },
-        icon(aOpt, aItemElement, aItemKey, aItem) {
-          aItemElement.removeClass("context-menu-icon-checked")
-          if (gReadingListFilter.getSelectedFilter() == gReadingListFilter.UNREAD) {
-            return "context-menu-icon-checked";
-          }
-        },
       },
       custzSep: "---",
       customize: {
@@ -1472,8 +1270,7 @@ async function handlePrefersColorSchemeChange(aMediaQuery)
 {
   let bkmks = await gCmd.getBookmarks();
   if (bkmks.length > 0) {
-    let unreadOnly = gReadingListFilter.getSelectedFilter() == gReadingListFilter.UNREAD;
-    await rebuildReadingList(bkmks, unreadOnly);
+    await rebuildReadingList(bkmks);
   }
 }
 
@@ -1581,12 +1378,6 @@ function toggleSearchBar(aIsVisible)
   else {
     $('#bookmark-filter input[type="radio"]').attr("disabled", true);
   }
-}
-
-
-function handleFilterSelection(aEvent)
-{
-  gReadingListFilter.setFilter(aEvent.target.value);
 }
 
 
@@ -1916,20 +1707,14 @@ browser.runtime.onMessage.addListener(aMessage => {
 
     if (aMessage.bookmarks.length == 0) {
       toggleSearchBar(false);
-      if (gReadingListFilter.getSelectedFilter() == gReadingListFilter.UNREAD) {
+      if (!gSearchBox.isSearchInProgress()) {
         gSearchBox.reset();
-      }
-      else {
-        if (!gSearchBox.isSearchInProgress()) {
-          gSearchBox.reset();
-        }
       }
       toggleEmptyMsg(true);
       break;
     }
 
-    let unreadOnly = gReadingListFilter.getSelectedFilter() == gReadingListFilter.UNREAD;
-    rebuildReadingList(aMessage.bookmarks, unreadOnly);
+    rebuildReadingList(aMessage.bookmarks);
     break;
 
   case "favicon-saved":
